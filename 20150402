@@ -17,4 +17,31 @@ https://www.vagrantup.com/
 Numpy: http://www.numpy.org/
 Matplot: http://matplotlib.org/
 
-5. 
+5. Restful
+
+
+6. Markdown
+Syntax: http://daringfireball.net/projects/markdown/syntax
+Mac OS: Mou
+Web: http://www.jianshu.com/
+
+* Similar with wiki syntax
+* The difference
+ 1. Quote: '>' to quote
+ 2. Hyperlink: '\[link text\]\(link url\)' 
+ 3. Image Link: '!' before Hyperlink '\!\[Image text\]\(image url\)' 
+ 4. Code: '\`code text\`'
+   * Can we 
+* Format:
+ 1. '\*italic\*': *italic*
+ 2. '\*\*strong\*\*': **strong**
+ 3. '\*\*\*': cut-off 
+***
+
+## Sample
+* Quote:
+> Quoted Text
+* HyperLink
+[GitHub](http://github.com)
+* Code:
+`import urllib2`
