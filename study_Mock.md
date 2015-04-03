@@ -1,12 +1,19 @@
 # Unittest in Python
+* [Unit Test](http://en.wikipedia.org/wiki/Unit_testing)
+* Test Doubles
+ * Fake
+ * Stub
+ * Mock
+ * Dummy
+ * [Test Doubles in IBM developerWorks](http://www.ibm.com/developerworks/cn/java/j-lo-TestDoubles/)
 * Mock - Mocking and Testing Library
 > mock is now part of the Python standard library, available as *unittest.mock* in Python 3.3 onwards.
 > Mock is very easy to use and is designed for use with unittest. Mock is based on the ‘action -> assertion’ pattern instead of ‘record -> replay’ used by many mocking frameworks.
 
 * patch
-  * As a decorator: mock classes or objects in a module
-  * As a context manager in a with statement
-  * *path.dict*
+ * As a decorator: mock classes or objects in a module
+ * As a context manager in a with statement
+ * *path.dict*
 <pre><code>
 >>> foo = {'key': 'value'}
 >>> original = foo.copy()
