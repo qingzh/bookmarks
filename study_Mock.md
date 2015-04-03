@@ -32,8 +32,10 @@
 >>> str(mock)
 'wheeeeee'
 </code></pre>
+
 * *autospec*, *create_autospec*: Auto-speccing can be done through the autospec argument to patch, or the create_autospec function.
 >  Auto-speccing creates mock objects that have the same attributes and methods as the objects they are replacing, and any functions and methods (including constructors) have the same *call signature* as the real object.
+
 ---
 * [Mock Documentation](http://www.voidspace.org.uk/python/mock/)
 * [Quick Guide](http://www.voidspace.org.uk/python/mock/#quick-guide)
