@@ -1,6 +1,6 @@
 # Unittest in Python
 * [Unit Test](http://en.wikipedia.org/wiki/Unit_testing)
-* Test Doubles
+* [Test Doubles](http://xunitpatterns.com/Test%20Double.html)
  * Fake
  * Stub
  * Mock
@@ -13,7 +13,7 @@
 * patch
  * As a decorator: mock classes or objects in a module
  * As a context manager in a with statement
- * *path.dict*
+ * *path.dict()*: set values in a dictionary just during a scope and restore the dictionary to its original state when the test ends
 <pre><code>
 >>> foo = {'key': 'value'}
 >>> original = foo.copy()
