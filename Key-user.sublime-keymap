@@ -1,0 +1,8 @@
+[
+	{ "keys":["alt+o"], "command":"open_dir", "args":{"dir":"$file_path", "file":"$file_name"}},
+	{ "keys": ["enter"], "command": "move", "args": {"by": "characters", "forward": true}, "context":
+	    [
+	        { "key": "following_text", "operator": "regex_contains", "operand": "^[)\\]\\>\\'\\\"]", "match_all": true }
+	    ]   
+  	}
+]
