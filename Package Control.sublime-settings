@@ -1,0 +1,15 @@
+{
+	"in_process_packages":
+	[
+	],
+	"installed_packages":
+	[
+		"BracketHighlighter",
+		"Git",
+		"Markdown Preview",
+		"Package Control",
+		"SourceTree",
+		"SublimeCodeIntel",
+		"Theme - Soda"
+	]
+}
