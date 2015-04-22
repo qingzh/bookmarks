@@ -2,12 +2,19 @@
 import gmail
 import re
 import datetime
+import os
+import ConfigParser
 
-
-USERNAME = '@gmail.com'
-PASSWORD = ''
+path = os.path.dirname(os.path.realpath(__file__))
+conf_file = os.path.join(path, '..', 'gmail.conf')
+conf_parser = ConfigParser.ConfigParser()
+conf_parser.read(conf_file)
+conf_dict = conf_parser.defaults()
+USERNAME = conf_dict.get('username')
+PASSWORD = conf_dict.get('password')
 # Please Update
-after = datetime.date(2015, 4, 20)
+after = datetime.datetime(2015, 4, 22)
+before = datetime.datetime(2015, 1, 1)
 
 
 class GNCOrder(object):
@@ -64,13 +71,15 @@ def parse_items(item_list):
         )
     return items
 
-g = gmail.login(USERNAME, PASSWORD)
+
+'''
+Multi Thread
+(1): fetch mail
+(2): parse mail
+'''
 
 
-def parse_gnc():
-    mails = g.label('SHOP/shipment').mail(
-        after=after, sender='gnc.com', body='BMWNQE')
-    sum_ = lambda x, y: float(x) + float(y)
+def parse_gnc(mails):
     orders = []
     for m in mails:
         mail = m.fetch()
@@ -95,36 +104,41 @@ def parse_gnc():
     return orders
 
 
-def write_file(prefix, orders):
+def write_file(prefix, orders, filter):
     today = datetime.date.today()
     with open('%s_%s.csv' % (prefix, today.strftime('%Y%m%d')), 'w') as f:
         for order in orders:
-            if 'rockaway' not in order.address.lower():
+            if filter(order.address):
                 f.write(order.to_csv() + '\n')
 
 
 reg = re.compile(
     'Shipped To:(.*)(Shipping Method:.*)Cost Summary:(.*)Billed To',
-    re.MULTILINE | re.DOTALL
-)
+    re.MULTILINE | re.DOTALL)
 # Pattern.group()
 # (1): shipping_method, (2): tracking_number
 reg_shipment = re.compile(
     'Shipping Method: ([^\r\n]+)\r\nTracking Number: (\S+)',
-    re.MULTILINE | re.DOTALL
-)
+    re.MULTILINE | re.DOTALL)
 # Pattern.group()
 # (1): name, (2): sku, (3): size, (4): dosage_forms, (5): quantity
 reg_item = re.compile(
     '([^\r\n]+)\r\nItem#: (\S+).*Size: (\S+) (\S+).*Quantity: (\S+)',
-    re.MULTILINE | re.DOTALL
-)
+    re.MULTILINE | re.DOTALL)
 # Pattern
 # (1): subtotal, (2): shipping, (3):tax; sum(1,2,3)
 reg_cost = re.compile(
     'Subtotal:\s*\$(\S+)\s+Shipping:\s*\$(\S+)\s+Tax:\s*\$(\S+)',
-    re.MULTILINE
-)
+    re.MULTILINE)
+
+sum_ = lambda x, y: float(x) + float(y)
+g = gmail.login(USERNAME, PASSWORD)
+mails = g.label('SHOP/shipment').mail(
+    after=after,
+    sender='gnc.com', body='BMWNQE')
+orders = parse_gnc(mails)
+write_file(os.path.join(path, '..', 'GNC_DCS'), orders,
+           filter=lambda t: 'rockaway' not in t.lower())
 
 '''
 orders = parse_gnc()
@@ -132,7 +146,9 @@ write_file('gnc_nj', orders)
 '''
 
 # Walgreens.com
+'''
 after = datetime.date(2015, 1, 1)
 mails = g.label('SHOP/shipment').mail(
     after=after, sender='walgreens.com', body='BMWNQE', subject='complete')
 
+'''
