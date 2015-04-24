@@ -12,9 +12,16 @@ conf_parser.read(conf_file)
 conf_dict = conf_parser.defaults()
 USERNAME = conf_dict.get('username')
 PASSWORD = conf_dict.get('password')
+KEYWORD = conf_dict.get('keyword')
+FROM = 'gnc.com'
+OUTPUT_PREFIX = conf_dict.get('output')
+AFTER = conf_dict.get('after')
+BEFORE = conf_dict.get('before')
+
 # Please Update
-after = datetime.datetime(2015, 4, 22)
-before = datetime.datetime(2015, 1, 1)
+after = datetime.datetime.strptime(AFTER, '%Y-%m-%d')
+if BEFORE is not None:
+    before = datetime.datetime.strptime(BEFORE, '%Y-%m-%d')
 
 
 class GNCOrder(object):
@@ -65,7 +72,7 @@ def parse_items(item_list):
     items = []
     for item, shipping_method, price in zip(*[iter(item_list)] * 3):
         # name, sku, size, dosage_forms, quantity
-        match = reg_item.search(item)
+        match = gnc_item_re.search(item)
         items.append(
             GNCItem(*(match.groups() + (price, shipping_method)))
         )
@@ -87,7 +94,7 @@ def parse_gnc(mails):
         match = reg.search(content.as_string())
         order, shipment, cost_summary = match.groups()
         order_info = order.strip().split('\r\n\r\n')
-        shipping_method, tracking_number = reg_shipment.search(
+        shipping_method, tracking_number = gnc_shipment_re.search(
             shipment).groups()
 
         orders.append(
@@ -98,7 +105,7 @@ def parse_gnc(mails):
                 items=parse_items(order_info[1:]),
                 shipping_method=shipping_method,
                 tracking_number=tracking_number,
-                cost=reduce(sum_, reg_cost.search(cost_summary).groups()),
+                cost=reduce(sum_, gnc_cost_re.search(cost_summary).groups()),
             )
         )
     return orders
@@ -117,28 +124,29 @@ reg = re.compile(
     re.MULTILINE | re.DOTALL)
 # Pattern.group()
 # (1): shipping_method, (2): tracking_number
-reg_shipment = re.compile(
+gnc_shipment_re = re.compile(
     'Shipping Method: ([^\r\n]+)\r\nTracking Number: (\S+)',
     re.MULTILINE | re.DOTALL)
 # Pattern.group()
 # (1): name, (2): sku, (3): size, (4): dosage_forms, (5): quantity
-reg_item = re.compile(
+gnc_item_re = re.compile(
     '([^\r\n]+)\r\nItem#: (\S+).*Size: (\S+) (\S+).*Quantity: (\S+)',
     re.MULTILINE | re.DOTALL)
 # Pattern
 # (1): subtotal, (2): shipping, (3):tax; sum(1,2,3)
-reg_cost = re.compile(
+gnc_cost_re = re.compile(
     'Subtotal:\s*\$(\S+)\s+Shipping:\s*\$(\S+)\s+Tax:\s*\$(\S+)',
     re.MULTILINE)
 
 sum_ = lambda x, y: float(x) + float(y)
 g = gmail.login(USERNAME, PASSWORD)
+
 mails = g.label('SHOP/shipment').mail(
-    after=after,
-    sender='gnc.com', body='BMWNQE')
+    after=after, sender=FROM, body=KEYWORD)
+
 orders = parse_gnc(mails)
-write_file(os.path.join(path, '..', 'GNC_DCS'), orders,
-           filter=lambda t: 'rockaway' not in t.lower())
+write_file(os.path.join(path, '..', OUTPUT_PREFIX), orders,
+           filter=lambda t: KEYWORD.lower() in t.lower())
 
 '''
 orders = parse_gnc()
