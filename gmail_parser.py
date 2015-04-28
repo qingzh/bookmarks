@@ -4,6 +4,8 @@ import re
 import datetime
 import os
 import ConfigParser
+import urllib2
+import json
 
 path = os.path.dirname(os.path.realpath(__file__))
 conf_file = os.path.join(path, '..', 'gmail.conf')
@@ -29,6 +31,9 @@ class GNCOrder(object):
     def __init__(self, order=None, date=None, address=None, items=None,
                  cost=None, shipping_method=None, tracking_number=None,
                  **kwargs):
+        '''
+        unique by tracking number
+        '''
         self.order = order
         self.shipping_method = shipping_method
         self.tracking_number = tracking_number
@@ -36,6 +41,7 @@ class GNCOrder(object):
         self.address = address
         self.cost = cost
         self.date = date
+        self.weight = get_fedex_weight(self.tracking_number)
 
     def to_csv(self):
         """ csv:
@@ -44,13 +50,13 @@ class GNCOrder(object):
         item = self.items[0]
         csv = [
             '\t'.join(
-                [self.order, self.tracking_number, item.sku,
+                [self.order, self.tracking_number, self.weight, item.sku,
                  item.name, item.quantity, self.date]
             )
         ]
         for item in self.items[1:]:
             csv.append(
-                '\t'.join(['', '', item.sku, item.name,  item.quantity, ''])
+                '\t'.join(['', '', '', item.sku, item.name,  item.quantity, ''])
             )
         return '\n'.join(csv)
 
@@ -84,6 +90,20 @@ Multi Thread
 (1): fetch mail
 (2): parse mail
 '''
+
+
+def get_fedex_weight(package, lbs_only=True):
+    url_pattern = 'https://www.fedex.com/trackingCal/track?action=trackpackages&location=en_US&version=1&format=json&data={"TrackPackagesRequest":{"appType":"WTRK","uniqueKey":"","processingParameters":{},"trackingInfoList":[{"trackNumberInfo":{"trackingNumber":"%s","trackingQualifier":"","trackingCarrier":""}}]}}'
+    response = urllib2.urlopen(url_pattern % package, timeout=10)
+    response_dict = json.loads(response.read())
+    package_response = response_dict.get('TrackPackagesResponse')
+    status_code = package_response.get('errorList')[0].get('code')
+    if status_code != '0':
+        return 'NULL'
+    package_list = package_response.get('packageList')
+    if lbs_only is True:
+        return package_list[0].get('displayPkgLbsWgt', 'NULL')
+    return package_list[0].get('displayPkgWgt', 'NULL')
 
 
 def parse_gnc(mails):
