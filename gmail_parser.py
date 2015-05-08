@@ -6,6 +6,7 @@ import os
 import ConfigParser
 import urllib2
 import json
+from ssl import SSLError
 
 path = os.path.dirname(os.path.realpath(__file__))
 conf_file = os.path.join(path, '..', 'gmail.conf')
@@ -94,7 +95,10 @@ Multi Thread
 
 def get_fedex_weight(package, lbs_only=True):
     url_pattern = 'https://www.fedex.com/trackingCal/track?action=trackpackages&location=en_US&version=1&format=json&data={"TrackPackagesRequest":{"appType":"WTRK","uniqueKey":"","processingParameters":{},"trackingInfoList":[{"trackNumberInfo":{"trackingNumber":"%s","trackingQualifier":"","trackingCarrier":""}}]}}'
-    response = urllib2.urlopen(url_pattern % package, timeout=10)
+    try:
+        response = urllib2.urlopen(url_pattern % package, timeout=50)
+    except SSLError:
+        return 'TIMEOUT'
     response_dict = json.loads(response.read())
     package_response = response_dict.get('TrackPackagesResponse')
     status_code = package_response.get('errorList')[0].get('code')
