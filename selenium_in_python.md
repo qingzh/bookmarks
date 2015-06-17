@@ -15,4 +15,27 @@
 3. Chrome 处理xls文件
   * xlrd
 
+4. 编译器里的路径，例如cygwin:
+  * Chrome
+`
+    options = ChromeOptions()
+    real_path = os.path.dirname(os.path.realpath(__file__))
+    #download_directory = os.path.join(real_path, 'downloads')
+    download_directory = 'E:\downloads'
+    prefs = {"download.default_directory":download_directory}
+    options.add_experimental_option('prefs', prefs)
+`
+  * Firefox
+`
+    fp = webdriver.FirefoxProfile()
+
+    fp.set_preference("browser.download.folderList",2)
+    fp.set_preference("browser.download.manager.showWhenStarting",False)
+    fp.set_preference("browser.download.dir",getcwd())
+    fp.set_preference("browser.helperApps.neverAsk.saveToDisk","text/csv")
+
+    browser = webdriver.Firefox(firefox_profile=fp)
+`
+> u'/cygdrive/d/github/webdriver/downloads'
+
 [selenium]: https://selenium-python.readthedocs.org/ Selenium Documents

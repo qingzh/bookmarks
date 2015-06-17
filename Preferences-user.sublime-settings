@@ -11,5 +11,8 @@
 	"style": "highlight",
 	"tab_size": 4,
 	"theme": "Soda Dark.sublime-theme",
-	"word_wrap": false
+	"translate_tabs_to_spaces": true,
+	"word_wrap": true,
+	"word_wrap_column": 80,
+	"fold_buttons": true
 }

@@ -22,9 +22,28 @@ AFTER = conf_dict.get('after')
 BEFORE = conf_dict.get('before')
 
 # Please Update
-after = datetime.datetime.strptime(AFTER, '%Y-%m-%d')
-if BEFORE is not None:
-    before = datetime.datetime.strptime(BEFORE, '%Y-%m-%d')
+after = AFTER and datetime.datetime.strptime(AFTER, '%Y-%m-%d')
+before = BEFORE and datetime.datetime.strptime(BEFORE, '%Y-%m-%d')
+
+
+reg = re.compile(
+    'Shipped To:(.*)(Shipping Method:.*)Cost Summary:(.*)Billed To',
+    re.MULTILINE | re.DOTALL)
+# Pattern.group()
+# (1): shipping_method, (2): tracking_number
+GNC_SHIPMENT_RE = re.compile(
+    'Shipping Method: ([^\r\n]+)\r\nTracking Number: (\S+)',
+    re.MULTILINE | re.DOTALL)
+# Pattern.group()
+# (1): name, (2): sku, (3): size, (4): dosage_forms, (5): quantity
+GNC_ITEM_RE = re.compile(
+    '([^\r\n]+)\r\nItem#: (\S+).*Size: (\S+) (\S+).*Quantity: (\S+)',
+    re.MULTILINE | re.DOTALL)
+# Pattern
+# (1): subtotal, (2): shipping, (3):tax; sum(1,2,3)
+GNC_COST_RE = re.compile(
+    'Subtotal:\s*\$(\S+)\s+Shipping:\s*\$(\S+)\s+Tax:\s*\$(\S+)',
+    re.MULTILINE)
 
 
 class GNCOrder(object):
@@ -42,7 +61,7 @@ class GNCOrder(object):
         self.address = address
         self.cost = cost
         self.date = date
-        self.weight = get_fedex_weight(self.tracking_number)
+        self.weight, self.signature = get_fedex_info(self.tracking_number)
 
     def to_csv(self):
         """ csv:
@@ -52,12 +71,13 @@ class GNCOrder(object):
         csv = [
             '\t'.join(
                 [self.order, self.tracking_number, self.weight, item.sku,
-                 item.name, item.quantity, self.date]
+                 item.name, item.quantity, self.date, self.signature]
             )
         ]
         for item in self.items[1:]:
             csv.append(
-                '\t'.join(['', '', '', item.sku, item.name,  item.quantity, ''])
+                '\t'.join(
+                    ['', '', '', item.sku, item.name,  item.quantity, '', ''])
             )
         return '\n'.join(csv)
 
@@ -79,7 +99,7 @@ def parse_items(item_list):
     items = []
     for item, shipping_method, price in zip(*[iter(item_list)] * 3):
         # name, sku, size, dosage_forms, quantity
-        match = gnc_item_re.search(item)
+        match = GNC_ITEM_RE.search(item)
         items.append(
             GNCItem(*(match.groups() + (price, shipping_method)))
         )
@@ -93,7 +113,7 @@ Multi Thread
 '''
 
 
-def get_fedex_weight(package, lbs_only=True):
+def get_fedex_info(package, lbs_only=True):
     url_pattern = 'https://www.fedex.com/trackingCal/track?action=trackpackages&location=en_US&version=1&format=json&data={"TrackPackagesRequest":{"appType":"WTRK","uniqueKey":"","processingParameters":{},"trackingInfoList":[{"trackNumberInfo":{"trackingNumber":"%s","trackingQualifier":"","trackingCarrier":""}}]}}'
     try:
         response = urllib2.urlopen(url_pattern % package, timeout=50)
@@ -106,8 +126,10 @@ def get_fedex_weight(package, lbs_only=True):
         return 'NULL'
     package_list = package_response.get('packageList')
     if lbs_only is True:
-        return package_list[0].get('displayPkgLbsWgt', 'NULL')
-    return package_list[0].get('displayPkgWgt', 'NULL')
+        weight = package_list[0].get('displayPkgLbsWgt', 'NULL')
+    weight = package_list[0].get('displayPkgWgt', 'NULL')
+    signature = package_list[0].get('statusWithDetails', 'NULL')
+    return weight, signature
 
 
 def parse_gnc(mails):
@@ -118,7 +140,7 @@ def parse_gnc(mails):
         match = reg.search(content.as_string())
         order, shipment, cost_summary = match.groups()
         order_info = order.strip().split('\r\n\r\n')
-        shipping_method, tracking_number = gnc_shipment_re.search(
+        shipping_method, tracking_number = GNC_SHIPMENT_RE.search(
             shipment).groups()
 
         orders.append(
@@ -129,7 +151,7 @@ def parse_gnc(mails):
                 items=parse_items(order_info[1:]),
                 shipping_method=shipping_method,
                 tracking_number=tracking_number,
-                cost=reduce(sum_, gnc_cost_re.search(cost_summary).groups()),
+                cost=reduce(sum_, GNC_COST_RE.search(cost_summary).groups()),
             )
         )
     return orders
@@ -143,30 +165,11 @@ def write_file(prefix, orders, filter):
                 f.write(order.to_csv() + '\n')
 
 
-reg = re.compile(
-    'Shipped To:(.*)(Shipping Method:.*)Cost Summary:(.*)Billed To',
-    re.MULTILINE | re.DOTALL)
-# Pattern.group()
-# (1): shipping_method, (2): tracking_number
-gnc_shipment_re = re.compile(
-    'Shipping Method: ([^\r\n]+)\r\nTracking Number: (\S+)',
-    re.MULTILINE | re.DOTALL)
-# Pattern.group()
-# (1): name, (2): sku, (3): size, (4): dosage_forms, (5): quantity
-gnc_item_re = re.compile(
-    '([^\r\n]+)\r\nItem#: (\S+).*Size: (\S+) (\S+).*Quantity: (\S+)',
-    re.MULTILINE | re.DOTALL)
-# Pattern
-# (1): subtotal, (2): shipping, (3):tax; sum(1,2,3)
-gnc_cost_re = re.compile(
-    'Subtotal:\s*\$(\S+)\s+Shipping:\s*\$(\S+)\s+Tax:\s*\$(\S+)',
-    re.MULTILINE)
-
 sum_ = lambda x, y: float(x) + float(y)
 g = gmail.login(USERNAME, PASSWORD)
 
 mails = g.label('SHOP/shipment').mail(
-    after=after, sender=FROM, body=KEYWORD)
+    after=after, sender=FROM, body=KEYWORD, before=before)
 
 orders = parse_gnc(mails)
 write_file(os.path.join(path, '..', OUTPUT_PREFIX), orders,
