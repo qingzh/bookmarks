@@ -174,16 +174,3 @@ mails = g.label('SHOP/shipment').mail(
 orders = parse_gnc(mails)
 write_file(os.path.join(path, '..', OUTPUT_PREFIX), orders,
            filter=lambda t: KEYWORD.lower() in t.lower())
-
-'''
-orders = parse_gnc()
-write_file('gnc_nj', orders)
-'''
-
-# Walgreens.com
-'''
-after = datetime.date(2015, 1, 1)
-mails = g.label('SHOP/shipment').mail(
-    after=after, sender='walgreens.com', body='BMWNQE', subject='complete')
-
-'''
