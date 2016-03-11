@@ -29,6 +29,44 @@ def hellocelery(x):
 ```bash
 $celery -A tasks worker --loglevel=debug
 ```
+可以看到如下日志:
+```bash
+when you upgrade to Celery 3.2::
+
+    CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
+
+You must only enable the serializers that you will actually use.
+
+
+  warnings.warn(CDeprecationWarning(W_PICKLE_DEPRECATED))
+
+ -------------- celery@rb4a03295.cm8 v3.1.19 (Cipater)
+---- **** -----
+--- * ***  * -- Linux-2.6.32-220.23.2.ali878.el6.x86_64-x86_64-with-redhat-6.2-DogTag
+-- * - **** ---
+- ** ---------- [config]
+- ** ---------- .> app:         hello:0x7fd54508a950
+- ** ---------- .> transport:   redis://localhost:7979/0
+- ** ---------- .> results:     disabled
+- *** --- * --- .> concurrency: 32 (prefork)
+-- ******* ----
+--- ***** ----- [queues]
+ -------------- .> celery           exchange=celery(direct) key=celery
+
+
+[tasks]
+  . celery.backend_cleanup
+  . celery.chain
+  . celery.chord
+  . celery.chord_unlock
+  . celery.chunks
+  . celery.group
+  . celery.map
+  . celery.starmap
+  . tasks.hellocelery
+
+[2016-03-11 13:54:14,137: DEBUG/MainProcess] | Worker: Starting Hub
+```
 
 #### 执行任务
 从 celery 的 worker 中选取执行
