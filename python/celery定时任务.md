@@ -18,8 +18,8 @@ $crontab -e
 ```python
 from celery import Celery
 
-app = Celery('hello', broker='amqp://guest@localhost//')
-# app = Celery.config_from_object('celeryconfig.py')
+# redis port: 7979, db: 0
+app = Celery('hello', broker='redis://localhost:7979/0')
 
 @app.task
 def hellocelery(x):
