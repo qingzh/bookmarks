@@ -1,0 +1,23 @@
+from datetime import timedelta
+from celery.schedules import crontab
+
+# periodic tasks
+# http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html
+# crontab
+# start celery with command:
+# celery -A tasks beat --loglevel=debug
+
+CELERYBEAT_SCHEDULE = {
+    'every-10-seconds': {
+        'task': 'tasks.hellocelery',
+        # every 10 seconds
+        'schedule': timedelta(seconds=10),
+        'args': ('10seconds', ),
+    },
+    'every-minutes': {
+        'task': 'tasks.hellocelery',
+        # every minutes
+        'schedule': crontab(hour='*', minute='*/1'),
+        'args': ('minutes', ),
+    }
+}
