@@ -1,0 +1,17 @@
+<uwsgi>
+     <socket>127.0.0.1:9970</socket>
+     <pyhome>$(HOME)/py27/</pyhome>
+     <pythonpath>$(HOME)/flaskweb/AlarmWeb/</pythonpath>
+     <pythonpath>$(HOME)/flaskweb/pylib/</pythonpath>
+     <pythonpath>/usr/local/lib/python2.7/</pythonpath>
+     <pythonpath>$(HOME)/py27/lib/python2.7/site-packages/</pythonpath>
+     <module>views</module>
+     <callable>app</callable>
+     <master/>
+     <processes>5</processes>
+     <async>30</async>
+     <memory-report/>
+     <enable-threads/>
+     <no-site/>
+     <daemonize>$(HOME)/uwsgi/logs/uwsgi.log</daemonize>
+</uwsgi>
