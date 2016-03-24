@@ -71,6 +71,9 @@ class LocalStack(object):
     .. versionadded:: 0.6.1
     """
 
+    def __init__(self):
+        self._local = Local()
+
     @property
     def top(self):
         """The topmost item on the stack.  If the stack is empty,
