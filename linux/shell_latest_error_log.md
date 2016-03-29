@@ -18,14 +18,14 @@ com.test.exception.AuthException: 内部错误: user has not logged in
     at com.***.doFilter(***.java:64)
 ```
 
-获取 Exception 内容短信息：
-```bash
-(find *.ERROR -mmin -5 | xargs -I{} tac {} | grep -m1 '^[0-9]' | cut -d']' -f2) 2>/dev/null 
-```
-
-获取 Exception 内容长信息：
+获取最后一条 Exception 内容长信息：
 ```bash
 (find *.ERROR -mmin -5 | xargs -I{} tac {} | grep -m1 -B1000 '^[0-9]' | tac) 2>/dev/null 
+```
+
+获取最后一条 Exception 内容短信息：
+```bash
+(find *.ERROR -mmin -5 | xargs -I{} tac {} | grep -m1 '^[0-9]' | cut -d']' -f2) 2>/dev/null 
 ```
 
 去掉前后空格以及空行, 类似 trim():
