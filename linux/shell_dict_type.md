@@ -12,7 +12,7 @@ echo ${b[c]}
 echo ${b['key']}
 # 反解析value
 dd=(${b['key']})
-echo ${f[1]}
+echo ${dd[1]}
 ```
 
 执行过程如下：
@@ -26,5 +26,6 @@ $ sh -x sh_dict.sh
 + echo 128 145
 128 145
 + dd=(${b['key']})
-+ echo
++ echo 145
+145
 ```
